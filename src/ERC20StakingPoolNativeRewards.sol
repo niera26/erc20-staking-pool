@@ -11,7 +11,7 @@ contract ERC20StakingPoolNativeRewards is AbstractERC20StakingPool {
         REWARDS_SCALE_FACTOR = 1; // native token has 18 decimals.
     }
 
-    function rewardsTokenBalance() public view override returns (uint256) {
+    function rewardsBalance() public view override returns (uint256) {
         return address(this).balance;
     }
 

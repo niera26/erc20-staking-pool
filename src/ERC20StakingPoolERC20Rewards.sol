@@ -22,7 +22,7 @@ contract ERC20StakingPoolERC20Rewards is AbstractERC20StakingPool {
         REWARDS_SCALE_FACTOR = 10 ** (18 - rewardsTokenDecimals);
     }
 
-    function rewardsTokenBalance() public view override returns (uint256) {
+    function rewardsBalance() public view override returns (uint256) {
         return REWARDS_TOKEN.balanceOf(address(this));
     }
 

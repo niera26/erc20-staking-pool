@@ -69,16 +69,16 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         STAKING_SCALE_FACTOR = 10 ** (18 - stakingTokenDecimals);
     }
 
-    function rewardsTokenBalance() public view virtual returns (uint256);
+    function rewardsBalance() public view virtual returns (uint256);
 
     function _transferRewardsToken(address to, uint256 amount) internal virtual;
 
-    function spointsTokenEmitted() public view returns (uint256) {
+    function emittedSpoints() public view returns (uint256) {
         return (block.number - lastDistributionBlock) * spointsPerBlock;
     }
 
-    function rewardsTokenEmitted() public view returns (uint256) {
-        uint256 balance = rewardsTokenBalance();
+    function emittedRewards() public view returns (uint256) {
+        uint256 balance = rewardsBalance();
         uint256 amountToClaim = totalRewardsDistributed - totalRewardsClaimed;
         uint256 availableAmount = balance - amountToClaim;
         uint256 emittedAmount = (block.number - lastDistributionBlock) * rewardsPerBlock;
@@ -182,8 +182,8 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
     function distribute() public notEmergencyOnly {
         if (totalStacked == 0) return;
 
-        uint256 emittedSpointsAmount = spointsTokenEmitted();
-        uint256 emittedRewardsAmount = rewardsTokenEmitted();
+        uint256 emittedSpointsAmount = emittedSpoints();
+        uint256 emittedRewardsAmount = emittedRewards();
 
         totalRewardsDistributed += emittedRewardsAmount;
         lastDistributionBlock = block.number;
@@ -230,7 +230,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
     }
 
     function emergencyWithdrawRewards() external onlyOwner emergencyOnly {
-        uint256 amount = rewardsTokenBalance();
+        uint256 amount = rewardsBalance();
 
         _transferRewardsToken(msg.sender, amount);
     }
