@@ -21,15 +21,16 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
 
     mapping(address => Stakeholder) public stakeholders;
 
-    uint256 public totalDistributed;
-    uint256 public totalClaimed;
-
     uint256 public spointsPerBlock;
     uint256 public rewardsPerBlock;
-    uint256 public lastDistributionBlock;
 
     uint256 public spointsPerToken;
     uint256 public rewardsPerToken;
+
+    uint256 public totalRewardsClaimed;
+    uint256 public totalRewardsDistributed;
+
+    uint256 public lastDistributionBlock;
 
     bool public isEmergency;
 
@@ -73,8 +74,8 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
     function _transferRewardsToken(address to, uint256 amount) internal virtual;
 
     function rewardsTokenAvailable() public view returns (uint256) {
+        uint256 amountToClaim = totalRewardsDistributed - totalRewardsClaimed;
         uint256 balance = rewardsTokenBalance();
-        uint256 amountToClaim = totalDistributed - totalClaimed;
 
         return balance - amountToClaim;
     }
@@ -147,6 +148,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
 
         _mint(addr, earnedSpoints);
         _transferRewardsToken(addr, earnedRewards);
+        totalRewardsClaimed += earnedRewards;
 
         emit Claim(msg.sender, earnedSpoints, earnedRewards);
     }
@@ -177,6 +179,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         stakeholder.earnedRewards = 0;
 
         _transferRewardsToken(addr, earnedRewards);
+        totalRewardsClaimed += earnedRewards;
 
         emit Claim(msg.sender, 0, earnedRewards);
     }
@@ -187,6 +190,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         uint256 emittedSpointsAmount = spointsTokenEmitted();
         uint256 emittedRewardsAmount = rewardsTokenEmitted();
 
+        totalRewardsDistributed += emittedRewardsAmount;
         lastDistributionBlock = block.number;
 
         spointsPerToken += (emittedSpointsAmount * PRECISION) / (totalStacked * STAKING_SCALE_FACTOR);
