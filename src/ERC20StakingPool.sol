@@ -105,6 +105,10 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         return stakeholders[addr].amount;
     }
 
+    function pendingSpoints(address addr) external view returns (uint256) {
+        return _pendingSpoints(stakeholders[addr]);
+    }
+
     function pendingRewards(address addr) external view returns (uint256) {
         return _pendingRewards(stakeholders[addr]);
     }
@@ -113,7 +117,8 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         Stakeholder storage stakeholder = stakeholders[msg.sender];
 
         distribute();
-        _earn(stakeholder);
+        _earnSpoints(stakeholder);
+        _earnRewards(stakeholder);
 
         totalStacked += amount;
         stakeholder.amount += amount;
@@ -127,7 +132,8 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         Stakeholder storage stakeholder = stakeholders[msg.sender];
 
         distribute();
-        _earn(stakeholder);
+        _earnSpoints(stakeholder);
+        _earnRewards(stakeholder);
 
         totalStacked -= amount;
         stakeholder.amount -= amount;
@@ -137,11 +143,12 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         emit Unstake(msg.sender, amount);
     }
 
-    function claim(address addr) external {
+    function claimAll(address addr) external {
         Stakeholder storage stakeholder = stakeholders[addr];
 
         distribute();
-        _earn(stakeholder);
+        _earnSpoints(stakeholder);
+        _earnRewards(stakeholder);
 
         uint256 earnedSpoints = stakeholder.earnedSpoints;
         uint256 earnedRewards = stakeholder.earnedRewards;
@@ -153,6 +160,36 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         _transferRewardsToken(addr, earnedRewards);
 
         emit Claim(msg.sender, earnedSpoints, earnedRewards);
+    }
+
+    function claimSpoints(address addr) external {
+        Stakeholder storage stakeholder = stakeholders[addr];
+
+        distribute();
+        _earnSpoints(stakeholder);
+
+        uint256 earnedSpoints = stakeholder.earnedSpoints;
+
+        stakeholder.earnedSpoints = 0;
+
+        _mint(addr, earnedSpoints);
+
+        emit Claim(msg.sender, earnedSpoints, 0);
+    }
+
+    function claimRewards(address addr) external {
+        Stakeholder storage stakeholder = stakeholders[addr];
+
+        distribute();
+        _earnRewards(stakeholder);
+
+        uint256 earnedRewards = stakeholder.earnedRewards;
+
+        stakeholder.earnedRewards = 0;
+
+        _transferRewardsToken(addr, earnedRewards);
+
+        emit Claim(msg.sender, 0, earnedRewards);
     }
 
     function distribute() public {
@@ -175,6 +212,11 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         return stakeholder.earnedSpoints + (RDiff * stakeholder.amount * STAKING_SCALE_FACTOR) / PRECISION;
     }
 
+    function _earnSpoints(Stakeholder storage stakeholder) private {
+        stakeholder.earnedSpoints = _pendingSpoints(stakeholder);
+        stakeholder.spointsPerTokenLast = spointsPerToken;
+    }
+
     function _pendingRewards(Stakeholder memory stakeholder) private view returns (uint256) {
         uint256 RDiff = rewardsPerToken - stakeholder.rewardsPerTokenLast;
 
@@ -182,10 +224,8 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
             + (RDiff * stakeholder.amount * STAKING_SCALE_FACTOR) / (REWARDS_SCALE_FACTOR * PRECISION);
     }
 
-    function _earn(Stakeholder storage stakeholder) private {
-        stakeholder.earnedSpoints = _pendingSpoints(stakeholder);
+    function _earnRewards(Stakeholder storage stakeholder) private {
         stakeholder.earnedRewards = _pendingRewards(stakeholder);
-        stakeholder.spointsPerTokenLast = spointsPerToken;
         stakeholder.rewardsPerTokenLast = rewardsPerToken;
     }
 }
