@@ -32,6 +32,8 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
     uint256 public spointsPerToken;
     uint256 public rewardsPerToken;
 
+    bool public isEmergency;
+
     struct Stakeholder {
         uint256 amount;
         uint256 earnedSpoints;
@@ -43,6 +45,16 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
     event Stake(address indexed addr, uint256 amount);
     event Unstake(address indexed addr, uint256 amount);
     event Claim(address indexed addr, uint256 earnedSpoints, uint256 earnedRewards);
+
+    modifier emergencyOnly() {
+        require(isEmergency, "emergency:off");
+        _;
+    }
+
+    modifier notEmergencyOnly() {
+        require(!isEmergency, "emergency:on");
+        _;
+    }
 
     constructor(string memory name, string memory symbol, IERC20Metadata stakingToken, IERC20Metadata rewardsToken)
         Ownable(msg.sender)
@@ -113,7 +125,7 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         return _pendingRewards(stakeholders[addr]);
     }
 
-    function stake(uint256 amount) external {
+    function stake(uint256 amount) external notEmergencyOnly {
         Stakeholder storage stakeholder = stakeholders[msg.sender];
 
         distribute();
@@ -128,7 +140,7 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         emit Stake(msg.sender, amount);
     }
 
-    function unstake(uint256 amount) external {
+    function unstake(uint256 amount) external notEmergencyOnly {
         Stakeholder storage stakeholder = stakeholders[msg.sender];
 
         distribute();
@@ -143,7 +155,7 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         emit Unstake(msg.sender, amount);
     }
 
-    function claimAll(address addr) external {
+    function claimAll(address addr) external notEmergencyOnly {
         Stakeholder storage stakeholder = stakeholders[addr];
 
         distribute();
@@ -162,7 +174,7 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         emit Claim(msg.sender, earnedSpoints, earnedRewards);
     }
 
-    function claimSpoints(address addr) external {
+    function claimSpoints(address addr) external notEmergencyOnly {
         Stakeholder storage stakeholder = stakeholders[addr];
 
         distribute();
@@ -177,7 +189,7 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         emit Claim(msg.sender, earnedSpoints, 0);
     }
 
-    function claimRewards(address addr) external {
+    function claimRewards(address addr) external notEmergencyOnly {
         Stakeholder storage stakeholder = stakeholders[addr];
 
         distribute();
@@ -192,7 +204,7 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         emit Claim(msg.sender, 0, earnedRewards);
     }
 
-    function distribute() public {
+    function distribute() public notEmergencyOnly {
         if (totalStacked == 0) return;
 
         uint256 emittedSpointsAmount = spointsTokenEmitted();
@@ -227,5 +239,27 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
     function _earnRewards(Stakeholder storage stakeholder) private {
         stakeholder.earnedRewards = _pendingRewards(stakeholder);
         stakeholder.rewardsPerTokenLast = rewardsPerToken;
+    }
+
+    function setSpointsPerBlock(uint256 _spointsPerBlock) external onlyOwner {
+        spointsPerBlock = _spointsPerBlock;
+    }
+
+    function setRewardsPerBlock(uint256 _rewardsPerBlock) external onlyOwner {
+        rewardsPerBlock = _rewardsPerBlock;
+    }
+
+    function turnEmergencyOn() external onlyOwner {
+        isEmergency = true;
+    }
+
+    function emergencyWithdrawRewards() external onlyOwner emergencyOnly {
+        uint256 amount = rewardsTokenBalance();
+
+        _transferRewardsToken(msg.sender, amount);
+    }
+
+    function emergencyWithdraw() external emergencyOnly {
+        STAKING_TOKEN.safeTransfer(msg.sender, stakeholders[msg.sender].amount);
     }
 }
