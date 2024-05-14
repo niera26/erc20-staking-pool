@@ -73,22 +73,17 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
 
     function _transferRewardsToken(address to, uint256 amount) internal virtual;
 
-    function rewardsTokenAvailable() public view returns (uint256) {
-        uint256 amountToClaim = totalRewardsDistributed - totalRewardsClaimed;
-        uint256 balance = rewardsTokenBalance();
-
-        return balance - amountToClaim;
+    function spointsTokenEmitted() public view returns (uint256) {
+        return (block.number - lastDistributionBlock) * spointsPerBlock;
     }
 
     function rewardsTokenEmitted() public view returns (uint256) {
-        uint256 availableAmount = rewardsTokenAvailable();
+        uint256 balance = rewardsTokenBalance();
+        uint256 amountToClaim = totalRewardsDistributed - totalRewardsClaimed;
+        uint256 availableAmount = balance - amountToClaim;
         uint256 emittedAmount = (block.number - lastDistributionBlock) * rewardsPerBlock;
 
         return emittedAmount < availableAmount ? emittedAmount : availableAmount;
-    }
-
-    function spointsTokenEmitted() public view returns (uint256) {
-        return (block.number - lastDistributionBlock) * spointsPerBlock;
     }
 
     function staked(address addr) external view returns (uint256) {
