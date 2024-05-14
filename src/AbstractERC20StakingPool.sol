@@ -7,11 +7,10 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
+abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
     using SafeERC20 for IERC20Metadata;
 
     IERC20Metadata public immutable STAKING_TOKEN;
-    IERC20Metadata public immutable REWARDS_TOKEN;
 
     uint256 public immutable STAKING_SCALE_FACTOR;
     uint256 public immutable REWARDS_SCALE_FACTOR;
@@ -56,44 +55,22 @@ contract ERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         _;
     }
 
-    constructor(string memory name, string memory symbol, IERC20Metadata stakingToken, IERC20Metadata rewardsToken)
+    constructor(string memory name, string memory symbol, IERC20Metadata stakingToken)
         Ownable(msg.sender)
         ERC20(name, symbol)
     {
         STAKING_TOKEN = stakingToken;
-        REWARDS_TOKEN = rewardsToken;
 
         uint8 stakingTokenDecimals = stakingToken.decimals();
-        uint8 rewardsTokenDecimals = _rewardsTokenDecimals();
 
         require(stakingTokenDecimals <= 18, "!decimals");
-        require(rewardsTokenDecimals <= 18, "!decimals");
 
         STAKING_SCALE_FACTOR = 10 ** (18 - stakingTokenDecimals);
-        REWARDS_SCALE_FACTOR = 10 ** (18 - rewardsTokenDecimals);
     }
 
-    function _isNativeRewards() private view returns (bool) {
-        return address(0) == address(REWARDS_TOKEN);
-    }
+    function rewardsTokenBalance() public view virtual returns (uint256);
 
-    function _rewardsTokenDecimals() private view returns (uint8) {
-        return _isNativeRewards() ? 18 : REWARDS_TOKEN.decimals();
-    }
-
-    function _transferRewardsToken(address to, uint256 amount) private {
-        if (!_isNativeRewards()) {
-            REWARDS_TOKEN.safeTransfer(to, amount);
-        }
-
-        (bool sent,) = payable(to).call{value: amount}("");
-
-        require(sent, "!transfer");
-    }
-
-    function rewardsTokenBalance() public view returns (uint256) {
-        return _isNativeRewards() ? address(this).balance : REWARDS_TOKEN.balanceOf(address(this));
-    }
+    function _transferRewardsToken(address to, uint256 amount) internal virtual;
 
     function rewardsTokenAvailable() public view returns (uint256) {
         uint256 balance = rewardsTokenBalance();
