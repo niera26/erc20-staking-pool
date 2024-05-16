@@ -17,7 +17,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
 
     uint256 public constant PRECISION = 1e18;
 
-    uint256 public totalStacked;
+    uint256 public totalStaked;
 
     mapping(address => Stakeholder) public stakeholders;
 
@@ -43,8 +43,8 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
     }
 
     event Stake(address indexed addr, uint256 amount);
-    event Unstake(address indexed addr, uint256 amount);
-    event Claim(address indexed addr, uint256 earnedSpoints, uint256 earnedRewards);
+    event Unstake(address indexed addr, address indexed to, uint256 amount);
+    event Claim(address indexed addr, address indexed to, uint256 spointsAmount, uint256 rewardsAmount);
 
     modifier emergencyOnly() {
         require(isEmergency, "emergency:off");
@@ -105,7 +105,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         _earnSpoints(stakeholder);
         _earnRewards(stakeholder);
 
-        totalStacked += amount;
+        totalStaked += amount;
         stakeholder.amount += amount;
 
         STAKING_TOKEN.safeTransferFrom(msg.sender, address(this), amount);
@@ -113,23 +113,23 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         emit Stake(msg.sender, amount);
     }
 
-    function unstake(uint256 amount) external notEmergencyOnly {
+    function unstake(address to, uint256 amount) external notEmergencyOnly {
         Stakeholder storage stakeholder = stakeholders[msg.sender];
 
         distribute();
         _earnSpoints(stakeholder);
         _earnRewards(stakeholder);
 
-        totalStacked -= amount;
+        totalStaked -= amount;
         stakeholder.amount -= amount;
 
-        STAKING_TOKEN.transfer(msg.sender, amount);
+        STAKING_TOKEN.transfer(to, amount);
 
-        emit Unstake(msg.sender, amount);
+        emit Unstake(msg.sender, to, amount);
     }
 
-    function claimAll(address addr) external notEmergencyOnly {
-        Stakeholder storage stakeholder = stakeholders[addr];
+    function claimAll(address to) external notEmergencyOnly {
+        Stakeholder storage stakeholder = stakeholders[msg.sender];
 
         distribute();
         _earnSpoints(stakeholder);
@@ -141,15 +141,15 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         stakeholder.earnedSpoints = 0;
         stakeholder.earnedRewards = 0;
 
-        _mint(addr, earnedSpoints);
-        _transferRewardsToken(addr, earnedRewards);
+        _mint(to, earnedSpoints);
+        _transferRewardsToken(to, earnedRewards);
         totalRewardsClaimed += earnedRewards;
 
-        emit Claim(msg.sender, earnedSpoints, earnedRewards);
+        emit Claim(msg.sender, to, earnedSpoints, earnedRewards);
     }
 
-    function claimSpoints(address addr) external notEmergencyOnly {
-        Stakeholder storage stakeholder = stakeholders[addr];
+    function claimSpoints(address to) external notEmergencyOnly {
+        Stakeholder storage stakeholder = stakeholders[msg.sender];
 
         distribute();
         _earnSpoints(stakeholder);
@@ -158,13 +158,13 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
 
         stakeholder.earnedSpoints = 0;
 
-        _mint(addr, earnedSpoints);
+        _mint(to, earnedSpoints);
 
-        emit Claim(msg.sender, earnedSpoints, 0);
+        emit Claim(msg.sender, to, earnedSpoints, 0);
     }
 
-    function claimRewards(address addr) external notEmergencyOnly {
-        Stakeholder storage stakeholder = stakeholders[addr];
+    function claimRewards(address to) external notEmergencyOnly {
+        Stakeholder storage stakeholder = stakeholders[msg.sender];
 
         distribute();
         _earnRewards(stakeholder);
@@ -173,25 +173,26 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
 
         stakeholder.earnedRewards = 0;
 
-        _transferRewardsToken(addr, earnedRewards);
+        _transferRewardsToken(to, earnedRewards);
         totalRewardsClaimed += earnedRewards;
 
-        emit Claim(msg.sender, 0, earnedRewards);
+        emit Claim(msg.sender, to, 0, earnedRewards);
     }
 
     function distribute() public notEmergencyOnly {
-        if (totalStacked == 0) return;
+        if (totalStaked > 0) {
+            uint256 emittedSpointsAmount = emittedSpoints();
+            uint256 emittedRewardsAmount = emittedRewards();
 
-        uint256 emittedSpointsAmount = emittedSpoints();
-        uint256 emittedRewardsAmount = emittedRewards();
+            totalRewardsDistributed += emittedRewardsAmount;
 
-        totalRewardsDistributed += emittedRewardsAmount;
+            spointsPerToken += (emittedSpointsAmount * PRECISION) / (totalStaked * STAKING_SCALE_FACTOR);
+
+            rewardsPerToken +=
+                (emittedRewardsAmount * REWARDS_SCALE_FACTOR * PRECISION) / (totalStaked * STAKING_SCALE_FACTOR);
+        }
+
         lastDistributionBlock = block.number;
-
-        spointsPerToken += (emittedSpointsAmount * PRECISION) / (totalStacked * STAKING_SCALE_FACTOR);
-
-        rewardsPerToken +=
-            (emittedRewardsAmount * REWARDS_SCALE_FACTOR * PRECISION) / (totalStacked * STAKING_SCALE_FACTOR);
     }
 
     function _pendingSpoints(Stakeholder memory stakeholder) private view returns (uint256) {
