@@ -33,8 +33,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         assertEq(balanceOfStakingToken(user1), 2_000);
 
         approve(user1, 2_000);
-        expectStakeEvent(user1, 2_000);
-        stake(user1, 2_000);
+        expectStakeEvent(user1, user1, 2_000);
+        stake(user1, user1, 2_000);
 
         assertEq(stacked(user1), 2_000);
         assertEq(stacked(user2), 0);
@@ -56,8 +56,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         assertEq(balanceOfStakingToken(user2), 6_000);
 
         approve(user2, 6_000);
-        expectStakeEvent(user2, 6_000);
-        stake(user2, 6_000);
+        expectStakeEvent(user2, user2, 6_000);
+        stake(user2, user2, 6_000);
 
         assertEq(stacked(user1), 2_000);
         assertEq(stacked(user2), 6_000);
@@ -79,8 +79,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         assertEq(balanceOfStakingToken(user1), 16_000);
 
         approve(user1, 16_000);
-        expectStakeEvent(user1, 16_000);
-        stake(user1, 16_000);
+        expectStakeEvent(user1, user1, 16_000);
+        stake(user1, user1, 16_000);
 
         assertEq(stacked(user1), 18_000);
         assertEq(stacked(user2), 6_000);
@@ -102,8 +102,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         assertEq(balanceOfStakingToken(user2), 12_000);
 
         approve(user2, 12_000);
-        expectStakeEvent(user2, 12_000);
-        stake(user2, 12_000);
+        expectStakeEvent(user2, user2, 12_000);
+        stake(user2, user2, 12_000);
 
         assertEq(stacked(user1), 18_000);
         assertEq(stacked(user2), 18_000);
@@ -197,8 +197,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         assertEq(balanceOfStakingToken(user3), 1_000);
 
         approve(user3, 1_000);
-        expectStakeEvent(user3, 1_000);
-        stake(user3, 1_000);
+        expectStakeEvent(user3, user3, 1_000);
+        stake(user3, user3, 1_000);
 
         assertEq(stacked(user3), 1_000);
         assertEq(pendingSpoints(user3), 0);

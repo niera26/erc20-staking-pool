@@ -42,7 +42,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         uint256 rewardsPerTokenLast;
     }
 
-    event Stake(address indexed addr, uint256 amount);
+    event Stake(address indexed addr, address indexed to, uint256 amount);
     event Unstake(address indexed addr, address indexed to, uint256 amount);
     event Claim(address indexed addr, address indexed to, uint256 spointsAmount, uint256 rewardsAmount);
 
@@ -98,8 +98,8 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         return _pendingRewards(stakeholders[addr]);
     }
 
-    function stake(uint256 amount) external notEmergencyOnly {
-        Stakeholder storage stakeholder = stakeholders[msg.sender];
+    function stake(address to, uint256 amount) external notEmergencyOnly {
+        Stakeholder storage stakeholder = stakeholders[to];
 
         distribute();
         _earnSpoints(stakeholder);
@@ -110,7 +110,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
 
         STAKING_TOKEN.safeTransferFrom(msg.sender, address(this), amount);
 
-        emit Stake(msg.sender, amount);
+        emit Stake(msg.sender, to, amount);
     }
 
     function unstake(address to, uint256 amount) external notEmergencyOnly {

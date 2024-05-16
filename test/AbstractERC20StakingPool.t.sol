@@ -12,7 +12,7 @@ abstract contract AbstractERC20StakingPoolTest is Test {
 
     AbstractERC20StakingPool internal pool;
 
-    event Stake(address indexed addr, uint256 amount);
+    event Stake(address indexed addr, address indexed to, uint256 amount);
     event Unstake(address indexed addr, address indexed to, uint256 amount);
     event Claim(address indexed addr, address indexed to, uint256 spointsAmount, uint256 rewardsAmount);
 
@@ -49,10 +49,10 @@ abstract contract AbstractERC20StakingPoolTest is Test {
         return pool.pendingRewards(addr);
     }
 
-    function stake(address addr, uint256 amount) internal {
+    function stake(address addr, address to, uint256 amount) internal {
         vm.prank(addr);
 
-        pool.stake(amount);
+        pool.stake(to, amount);
     }
 
     function unstake(address addr, address to, uint256 amount) internal {
@@ -79,9 +79,9 @@ abstract contract AbstractERC20StakingPoolTest is Test {
         pool.claimRewards(to);
     }
 
-    function expectStakeEvent(address addr, uint256 amount) internal {
+    function expectStakeEvent(address addr, address to, uint256 amount) internal {
         vm.expectEmit(true, true, true, true, address(pool));
-        emit Stake(addr, amount);
+        emit Stake(addr, to, amount);
     }
 
     function expectUnstakeEvent(address addr, address to, uint256 amount) internal {
