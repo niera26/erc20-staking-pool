@@ -8,8 +8,6 @@ import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC2
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
-    using SafeERC20 for IERC20Metadata;
-
     IERC20Metadata public immutable STAKING_TOKEN;
 
     uint256 public immutable STAKING_SCALE_FACTOR;
@@ -109,7 +107,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         totalStaked += amount;
         stakeholder.amount += amount;
 
-        STAKING_TOKEN.safeTransferFrom(msg.sender, address(this), amount);
+        SafeERC20.safeTransferFrom(STAKING_TOKEN, msg.sender, address(this), amount);
 
         emit Stake(msg.sender, amount);
     }
@@ -124,7 +122,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         totalStaked -= amount;
         stakeholder.amount -= amount;
 
-        STAKING_TOKEN.transfer(to, amount);
+        SafeERC20.safeTransfer(STAKING_TOKEN, to, amount);
 
         emit Unstake(msg.sender, to, amount);
     }
@@ -244,7 +242,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
 
         stakeholder.amount -= amount;
 
-        STAKING_TOKEN.safeTransfer(to, amount);
+        SafeERC20.safeTransfer(STAKING_TOKEN, to, amount);
 
         emit EmergencyWithdraw(msg.sender, to, amount);
     }

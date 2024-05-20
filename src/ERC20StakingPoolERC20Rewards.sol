@@ -6,8 +6,6 @@ import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.
 import {AbstractERC20StakingPool} from "./AbstractERC20StakingPool.sol";
 
 contract ERC20StakingPoolERC20Rewards is AbstractERC20StakingPool {
-    using SafeERC20 for IERC20Metadata;
-
     IERC20Metadata public immutable REWARDS_TOKEN;
 
     constructor(string memory name, string memory symbol, IERC20Metadata stakingToken, IERC20Metadata rewardsToken)
@@ -27,6 +25,6 @@ contract ERC20StakingPoolERC20Rewards is AbstractERC20StakingPool {
     }
 
     function _transferRewardsToken(address to, uint256 amount) internal override {
-        REWARDS_TOKEN.safeTransfer(to, amount);
+        SafeERC20.safeTransfer(REWARDS_TOKEN, to, amount);
     }
 }
