@@ -45,6 +45,7 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
     event Stake(address indexed addr, uint256 amount);
     event Unstake(address indexed addr, address indexed to, uint256 amount);
     event Claim(address indexed addr, uint256 spointsAmount, uint256 rewardsAmount);
+    event EmergencyWithdraw(address indexed addr, address indexed to, uint256 amount);
 
     modifier emergencyOnly() {
         require(isEmergency, "emergency:off");
@@ -236,7 +237,15 @@ abstract contract AbstractERC20StakingPool is Ownable, ERC20, ERC20Burnable {
         _transferRewardsToken(msg.sender, amount);
     }
 
-    function emergencyWithdraw() external emergencyOnly {
-        STAKING_TOKEN.safeTransfer(msg.sender, stakeholders[msg.sender].amount);
+    function emergencyWithdraw(address to, uint256 amount) external emergencyOnly {
+        Stakeholder storage stakeholder = stakeholders[msg.sender];
+
+        require(amount <= stakeholder.amount);
+
+        stakeholder.amount -= amount;
+
+        STAKING_TOKEN.safeTransfer(to, amount);
+
+        emit EmergencyWithdraw(msg.sender, to, amount);
     }
 }
