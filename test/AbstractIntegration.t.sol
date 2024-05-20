@@ -33,8 +33,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         assertEq(balanceOfStakingToken(user1), 2_000);
 
         approve(user1, 2_000);
-        expectStakeEvent(user1, user1, 2_000);
-        stake(user1, user1, 2_000);
+        expectStakeEvent(user1, 2_000);
+        stake(user1, 2_000);
 
         assertEq(stacked(user1), 2_000);
         assertEq(stacked(user2), 0);
@@ -56,8 +56,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         assertEq(balanceOfStakingToken(user2), 6_000);
 
         approve(user2, 6_000);
-        expectStakeEvent(user2, user2, 6_000);
-        stake(user2, user2, 6_000);
+        expectStakeEvent(user2, 6_000);
+        stake(user2, 6_000);
 
         assertEq(stacked(user1), 2_000);
         assertEq(stacked(user2), 6_000);
@@ -79,8 +79,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         assertEq(balanceOfStakingToken(user1), 16_000);
 
         approve(user1, 16_000);
-        expectStakeEvent(user1, user1, 16_000);
-        stake(user1, user1, 16_000);
+        expectStakeEvent(user1, 16_000);
+        stake(user1, 16_000);
 
         assertEq(stacked(user1), 18_000);
         assertEq(stacked(user2), 6_000);
@@ -102,8 +102,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         assertEq(balanceOfStakingToken(user2), 12_000);
 
         approve(user2, 12_000);
-        expectStakeEvent(user2, user2, 12_000);
-        stake(user2, user2, 12_000);
+        expectStakeEvent(user2, 12_000);
+        stake(user2, 12_000);
 
         assertEq(stacked(user1), 18_000);
         assertEq(stacked(user2), 18_000);
@@ -197,8 +197,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         assertEq(balanceOfStakingToken(user3), 1_000);
 
         approve(user3, 1_000);
-        expectStakeEvent(user3, user3, 1_000);
-        stake(user3, user3, 1_000);
+        expectStakeEvent(user3, 1_000);
+        stake(user3, 1_000);
 
         assertEq(stacked(user3), 1_000);
         assertEq(pendingSpoints(user3), 0);
@@ -237,8 +237,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         originalRewardsBalance = balanceOfRewardsToken(user1);
         totalRewardsClaimed = originalPendingRewards;
 
-        expectClaimEvent(user1, user1, originalPendingSpoints, originalPendingRewards);
-        claimAll(user1, user1);
+        expectClaimEvent(user1, originalPendingSpoints, originalPendingRewards);
+        claimAll(user1);
         assertEq(pendingSpoints(user1), 0);
         assertEq(pendingRewards(user1), 0);
         assertEq(balanceOfSpointsToken(user1), originalPendingSpoints);
@@ -250,8 +250,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         originalRewardsBalance = balanceOfRewardsToken(user2);
         totalRewardsClaimed += originalPendingRewards;
 
-        expectClaimEvent(user2, user2, originalPendingSpoints, originalPendingRewards);
-        claimAll(user2, user2);
+        expectClaimEvent(user2, originalPendingSpoints, originalPendingRewards);
+        claimAll(user2);
         assertEq(pendingSpoints(user2), 0);
         assertEq(pendingRewards(user2), 0);
         assertEq(balanceOfSpointsToken(user2), originalPendingSpoints);
@@ -263,8 +263,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         originalRewardsBalance = balanceOfRewardsToken(user3);
         totalRewardsClaimed += originalPendingRewards;
 
-        expectClaimEvent(user3, user3, originalPendingSpoints, originalPendingRewards);
-        claimAll(user3, user3);
+        expectClaimEvent(user3, originalPendingSpoints, originalPendingRewards);
+        claimAll(user3);
         assertEq(pendingSpoints(user3), 0);
         assertEq(pendingRewards(user3), 0);
         assertEq(balanceOfSpointsToken(user3), originalPendingSpoints);
@@ -279,8 +279,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         originalRewardsBalance = balanceOfRewardsToken(user1);
         totalRewardsClaimed = originalPendingRewards;
 
-        expectClaimEvent(user1, user1, originalPendingSpoints, 0);
-        claimSpoints(user1, user1);
+        expectClaimEvent(user1, originalPendingSpoints, 0);
+        claimSpoints(user1);
         assertEq(pendingSpoints(user1), 0);
         assertEq(pendingRewards(user1), originalPendingRewards);
         assertEq(balanceOfSpointsToken(user1), originalPendingSpoints);
@@ -292,8 +292,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         originalRewardsBalance = balanceOfRewardsToken(user2);
         totalRewardsClaimed += originalPendingRewards;
 
-        expectClaimEvent(user2, user2, originalPendingSpoints, 0);
-        claimSpoints(user2, user2);
+        expectClaimEvent(user2, originalPendingSpoints, 0);
+        claimSpoints(user2);
         assertEq(pendingSpoints(user2), 0);
         assertEq(pendingRewards(user2), originalPendingRewards);
         assertEq(balanceOfSpointsToken(user2), originalPendingSpoints);
@@ -305,8 +305,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         originalRewardsBalance = balanceOfRewardsToken(user3);
         totalRewardsClaimed += originalPendingRewards;
 
-        expectClaimEvent(user3, user3, originalPendingSpoints, 0);
-        claimSpoints(user3, user3);
+        expectClaimEvent(user3, originalPendingSpoints, 0);
+        claimSpoints(user3);
         assertEq(pendingSpoints(user3), 0);
         assertEq(pendingRewards(user3), originalPendingRewards);
         assertEq(balanceOfSpointsToken(user3), originalPendingSpoints);
@@ -321,8 +321,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         originalRewardsBalance = balanceOfRewardsToken(user1);
         totalRewardsClaimed = originalPendingRewards;
 
-        expectClaimEvent(user1, user1, 0, originalPendingRewards);
-        claimRewards(user1, user1);
+        expectClaimEvent(user1, 0, originalPendingRewards);
+        claimRewards(user1);
         assertEq(pendingSpoints(user1), originalPendingSpoints);
         assertEq(pendingRewards(user1), 0);
         assertEq(balanceOfSpointsToken(user1), 0);
@@ -334,8 +334,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         originalRewardsBalance = balanceOfRewardsToken(user2);
         totalRewardsClaimed += originalPendingRewards;
 
-        expectClaimEvent(user2, user2, 0, originalPendingRewards);
-        claimRewards(user2, user2);
+        expectClaimEvent(user2, 0, originalPendingRewards);
+        claimRewards(user2);
         assertEq(pendingSpoints(user2), originalPendingSpoints);
         assertEq(pendingRewards(user2), 0);
         assertEq(balanceOfSpointsToken(user2), 0);
@@ -347,8 +347,8 @@ abstract contract AbstractIntegrationTest is AbstractERC20StakingPoolTest {
         originalRewardsBalance = balanceOfRewardsToken(user3);
         totalRewardsClaimed += originalPendingRewards;
 
-        expectClaimEvent(user3, user3, 0, originalPendingRewards);
-        claimRewards(user3, user3);
+        expectClaimEvent(user3, 0, originalPendingRewards);
+        claimRewards(user3);
         assertEq(pendingSpoints(user3), originalPendingSpoints);
         assertEq(pendingRewards(user3), 0);
         assertEq(balanceOfSpointsToken(user3), 0);
