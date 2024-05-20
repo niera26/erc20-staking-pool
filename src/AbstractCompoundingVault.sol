@@ -19,7 +19,7 @@ abstract contract AbstractCompoundingVault is ERC4626 {
         pool = _pool;
     }
 
-    function _swapRewardsToAssets() internal virtual {}
+    function _swapRewardsToAssets(address addr) internal virtual {}
 
     function totalAssets() public view override returns (uint256) {
         return pool.staked(address(this));
@@ -51,7 +51,7 @@ abstract contract AbstractCompoundingVault is ERC4626 {
     function compound() external {
         pool.claimRewards();
 
-        _swapRewardsToAssets();
+        _swapRewardsToAssets(msg.sender);
 
         uint256 assets = pool.STAKING_TOKEN().balanceOf(address(this));
 
